@@ -4,18 +4,41 @@ from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import pandas as pd # table generation?
+import pandas as pd # table generation
 
-def read_list(table):
-    '''
-    goal is to extract the values used in scrape to get scores
-    determine the season year, team_code, and gymnast_ID which will be hardcoded into the data
-    '''
-    for x, y, z in table:
-        codes = [x, y, z for x, y, z in table]
-    return codes
+def team_code(team):
+    team_list = ['Uncommitted', 'Air Force', 'Alabama', 'Alaska', 'Arizona', 'Arizona State', 'Arkansas', 'Auburn', 'BYU', 'Ball State', 'Boise State', 'Bowling Green', 'Bridgeport', 'Brockport', 'Brown', 'California', 'Centenary College', 'Central Michigan', 'Cornell', 'Cortland State', 'Denver', 'Eastern Michigan','Florida', 'George Washington', 'Georgia', 'Gustavus Aldophus', 'Hamline', 'Illinois State', 'Illinois', 'Iowa', 'Iowa State', 'Ithaca College', 'Kent State', 'Kentucky', 'LSU', 'Lindenwood', 'Maryland', 'Michigan', 'Michigan State', 'Minnesota', 'Missouri', 'Nebraska','New Hampshire', 'North Carolina', 'North Carolina State', 'Northern Illinois', 'Ohio State', 'Oklahoma', 'Oregon State', 'Penn State', 'Pennsylvania', 'Pittsburgh', 'Rhode Island College', 'Rutgers', 'S.E. Missouri', 'Sacramento State', 'San Jose State', '', 'Southern Conn.', 'Southern Utah', 'Springfield College', 'Stanford', 'Temple', 'Texas Women\'s', 'Towson', 'UC Davis', 'UCLA',  '', 'Ursinus College', 'Utah', 'Utah State', 'Washington', 'West Chester', 'West Virginia', 'Western Michigan', 'William & Mary', 'Winona State', 'UW-Eau Claire', 'UW-LaCross', 'UW-Oshkosh', 'UW-Stout', 'UW-Whitewater', 'Yale']
+    if team == 'Clemson':
+        return 163
+    elif team == 'LIU':
+        return 128
+    elif team == 'Fisk':
+        return 156
+    elif team == 'Greenville':
+        return 154
+    elif team == 'Talledega':
+        return 165
+    elif team == 'Utica':
+        return 164
+    else:
+        return team_list.index(team)
+    
+def get_urls(csv):
+    urls = []
 
-def scrape(year, team_code, gymnast_ID):
+    for row in csv:
+        year = csv.year()
+        team_code = team_code(team)
+        gymnast_id = csv.gymnast_ID
+
+        url = 'https://roadtonationals.com/results/teams/gymnast/2024/66/31516/' + year + '/' + team_code + '/' + gymnast_id # URL 
+
+        urls.append(url)
+        
+    return urls
+
+
+def scrape(url):
     firefox_options = Options()
     firefox_options.add_argument('--headless')  # headless mode gets rid of GUI
     geckodriver_path = "drivers/geckodriver" # put drivers in driver folder
@@ -23,21 +46,23 @@ def scrape(year, team_code, gymnast_ID):
 
     driver = webdriver.Firefox(service=service, options=firefox_options)
 
-    driver.get('https://roadtonationals.com/results/teams/gymnast/2024/66/31516' + year + team_code + gymnast_ID)  # URL
+    get_urls(csv)
+
+    driver.get('url')  # URL
 
     # Wait for dynamic content to load
     time.sleep(10)  # Adjust sleep time if needed
 
-    # Get the page source and parse with BeautifulSoup
+    # page source, parse with BeautifulSoup
     soup = BeautifulSoup(driver.page_source, 'html.parser')
 
     table_element = driver.find_element(By.CLASS_NAME, 'ReactTable')  # Adjust if needed
 
-    # Get the table headers
+    # headers
     header_elements = table_element.find_elements(By.XPATH, './/div[@role="columnheader"]/div')
     headers = [header.text for header in header_elements if header.text != ""]
 
-    # Get the table rows
+    # rows
     row_elements = table_element.find_elements(By.XPATH, './/div[@role="rowgroup"]')
 
     # Extract data from rows
@@ -54,22 +79,5 @@ def scrape(year, team_code, gymnast_ID):
 
     driver.quit()
 
-'''
-    # Extract data as needed
-    results_table = soup.find('table', class_='results-table')
-    if results_table:
-        rows = results_table.find_all('tr')
-        for row in rows:
-            columns = row.find_all('td')
-            data = [col.get_text().strip() for col in columns]
-            print(data)
-    else:
-        print(driver.page_source)
-'''
-
-'''
-def get_team_code(team):
-    team_table = ['Air Force', 'Alabama', 'Alaska', 'Arizona', 'Arizona State', 'Arkansas', 'Auburn', 'Ball State', 'Boise State', 'Bowling Green', 'Bridgeport', 'Brockport', 'Brown', 'BYU', 'California', 'Centenary College', 'Central Michigan', 'Cornell', 'Cortland State', 'Denver', 'Eastern Michigan', 'Fisk', 'Florida', 'George Washington', 'Georgia', 'Greenville', 'Gustavus Aldophus', 'Hamline', 'Illinois', 'Illinois State', 'Iowa', 'Iowa State', 'Ithaca College', 'Kent State', 'Kentucky', 'Lindenwood', 'LIU', 'LSU', 'Maryland', 'Michigan', 'Michigan State', 'Minnesota', 'Missouri', 'Nebraska', 'New Hampshire', 'North Carolina', 'North Carolina State', 'Northern Illinois', 'Ohio State', 'Oklahoma', 'Oregon State', 'Penn State', 'Pennsylvania', 'Pittsburgh', 'Rhode Island College', 'Rutgers', 'S.E. Missouri', 'Sacramento State', 'San Jose State', 'Simpson', 'Southern Conn.', 'Southern Utah', 'Springfield College', 'Stanford', 'Temple', 'Texas Women\'s', 'Towson', 'UC Davis', 'UCLA', 'Ursinus College', 'Utah', 'Utah State', 'UW-Eau Claire', 'UW-LaCross', 'UW-Oshkosh', 'UW-Stout', 'UW-Whitewater', 'Washington', 'West Chester', 'West Virginia', 'Western Michigan', 'William & Mary', 'Winona State', 'Yale']
-    code = team_table.index(team)
-    print(code)
-'''
+def batch_scrapy():
+    return
